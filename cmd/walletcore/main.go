@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/paulohhs/ms-wallet/internal/web"
 	"github.com/paulohhs/ms-wallet/internal/web/webserver"
 	"github.com/paulohhs/ms-wallet/pkg/events"
+	"github.com/paulohhs/ms-wallet/pkg/uow"
 )
 
 func main() {
@@ -23,19 +25,27 @@ func main() {
 	defer db.Close()
 
 	eventDispatcher := events.NewEventDispatcher()
-	// eventDispatcher.Register("TransactionCreated", handler)
-
 	transactionCreatedEvent := event.NewTransactionCreated()
+	// eventDispatcher.Register("TransactionCreated", handler)
 
 	clientDb := database.NewClientDB(db)
 	accountDb := database.NewAccountDB(db)
-	transactionDb := database.NewTransactionDB(db)
+
+	ctx := context.Background()
+	uow := uow.NewUow(ctx, db)
+
+	uow.Register("AccountDB", func(tx *sql.Tx) interface{} {
+		return database.NewAccountDB(db)
+	})
+
+	uow.Register("TransactionDB", func(tx *sql.Tx) interface{} {
+		return database.NewTransactionDB(db)
+	})
 
 	createClientUseCase := create_client.NewCreateClientUseCase(clientDb)
 	createAccountUseCase := create_account.NewCreateAccountUseCase(accountDb, clientDb)
 	transactionUseCase := create_transaction.NewCreateTransactionUseCase(
-		transactionDb,
-		accountDb,
+		uow,
 		eventDispatcher,
 		transactionCreatedEvent,
 	)
