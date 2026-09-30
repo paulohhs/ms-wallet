@@ -1,31 +1,17 @@
-package createclient
+package create_client
 
 import (
 	"testing"
 
-	"github.com/paulohhs/ms-wallet/internal/entity"
+	"github.com/paulohhs/ms-wallet/internal/usecase/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-type ClientGatewayMock struct {
-	mock.Mock
-}
-
-func (m *ClientGatewayMock) Get(id string) (*entity.Client, error) {
-	args := m.Called(id)
-	return args.Get(0).(*entity.Client), args.Error(1)
-}
-
-func (m *ClientGatewayMock) Save(client *entity.Client) error {
-	args := m.Called(client)
-	return args.Error(0)
-}
-
 func TestCreateClientUseCase_Execute(t *testing.T) {
-	m := &ClientGatewayMock{}
-	m.On("Save", mock.Anything).Return(nil)
-	uc := NewCreateClientUseCase(m)
+	clientMock := &mocks.ClientGatewayMock{}
+	clientMock.On("Save", mock.Anything).Return(nil)
+	uc := NewCreateClientUseCase(clientMock)
 
 	output, err := uc.Execute(CreateClientInputDTO{
 		Name:  "John Doe",
@@ -37,6 +23,6 @@ func TestCreateClientUseCase_Execute(t *testing.T) {
 	assert.NotEmpty(t, output.ID)
 	assert.Equal(t, "John Doe", output.Name)
 	assert.Equal(t, "j@j.com", output.Email)
-	m.AssertExpectations(t)
-	m.AssertNumberOfCalls(t, "Save", 1)
+	clientMock.AssertExpectations(t)
+	clientMock.AssertNumberOfCalls(t, "Save", 1)
 }
