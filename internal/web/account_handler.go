@@ -17,7 +17,7 @@ func NewWebAccountHandler(createAccountUseCase create_account.CreateAccountUseCa
 	}
 }
 
-func (h *WebAccountHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
+func (h *WebAccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var dto create_account.CreateAccountInputDTO
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
